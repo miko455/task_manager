@@ -38,6 +38,7 @@ function TaskForm({ isAuthenticated, onTaskAdded }) {
 
   return (
     <form onSubmit={handleSubmit} className="task-form">
+      <h2>Add New Task</h2>
       {error && <div className="error-message">{error}</div>}
       <input
         type="text"

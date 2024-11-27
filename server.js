@@ -4,7 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import taskRoutes from './routes/taskRoutes.js';
 import userRoutes from './routes/userRoutes.js';
-import { authenticateToken } from './middleware/authMiddleware.js';
+import { optionalAuthMiddleware } from './middleware/authMiddleware.js';
 import errorHandler from './middleware/errorHandler.js';
 
 dotenv.config();
@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 8080;
 // Configure CORS for Vercel frontend
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:3000',
-  'https://taskmgrlive.vercel.app/'
+  'https://taskmgrlive.vercel.app'
 ];
 
 app.use(cors({
@@ -40,7 +40,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 .catch((error) => console.error('MongoDB connection error:', error));
 
 app.use('/api/users', userRoutes);
-app.use('/api/tasks', taskRoutes);
+app.use('/api/tasks', optionalAuthMiddleware, taskRoutes);
 
 app.use(errorHandler);
 

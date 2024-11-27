@@ -75,6 +75,7 @@ function TaskList({ isAuthenticated }) {
 
   return (
     <div className="task-list">
+      <h2>Tasks</h2>
       {error && <div className="error-message">{error}</div>}
       <div className="filters">
         <select name="priority" onChange={(e) => setFilter({ ...filter, priority: e.target.value })} value={filter.priority}>

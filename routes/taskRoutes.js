@@ -1,11 +1,10 @@
 import express from 'express';
 import Task from '../models/Task.js';
-import { authenticateToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Get all tasks (public and user-specific)
-router.get('/', authenticateToken, async (req, res, next) => {
+// Get all tasks
+router.get('/', async (req, res, next) => {
   try {
     const { priority, status, search } = req.query;
     let query = {};
@@ -38,7 +37,7 @@ router.get('/', authenticateToken, async (req, res, next) => {
 });
 
 // Get a single task
-router.get('/:id', authenticateToken, async (req, res, next) => {
+router.get('/:id', async (req, res, next) => {
   try {
     const task = await Task.findOne({
       _id: req.params.id,
@@ -54,7 +53,7 @@ router.get('/:id', authenticateToken, async (req, res, next) => {
 });
 
 // Create a new task
-router.post('/', authenticateToken, async (req, res, next) => {
+router.post('/', async (req, res, next) => {
   try {
     const task = new Task({
       ...req.body,
@@ -68,7 +67,7 @@ router.post('/', authenticateToken, async (req, res, next) => {
 });
 
 // Update a task
-router.put('/:id', authenticateToken, async (req, res, next) => {
+router.put('/:id', async (req, res, next) => {
   try {
     const task = await Task.findOneAndUpdate(
       {
@@ -88,7 +87,7 @@ router.put('/:id', authenticateToken, async (req, res, next) => {
 });
 
 // Delete a task
-router.delete('/:id', authenticateToken, async (req, res, next) => {
+router.delete('/:id', async (req, res, next) => {
   try {
     const task = await Task.findOneAndDelete({
       _id: req.params.id,
