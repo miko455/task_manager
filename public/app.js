@@ -1,42 +1,98 @@
-// Fetch API
 const API_URL = 'https://task-manager-gmp3gw.fly.dev';
 let token = localStorage.getItem('token');
 
-fetch('https://task-manager-gmp3gw.fly.dev')
-.then(response => response.json())
-.then(data => console.log(data))
-.catch(error => console.error(error));
+function renderApp() {
+    const appContainer = document.getElementById('app-container');
+    appContainer.innerHTML = `
+        <div id="auth-buttons">
+            ${token ? '<button id="logout-btn">Logout</button>' : '<button id="login-register-btn">Login/Register</button>'}
+        </div>
+        <div id="auth-forms" style="display: none;">
+            <form id="login-form">
+                <h2>Login</h2>
+                <input type="text" id="login-username" placeholder="Username" required>
+                <input type="password" id="login-password" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+            <form id="register-form">
+                <h2>Register</h2>
+                <input type="text" id="register-username" placeholder="Username" required>
+                <input type="email" id="register-email" placeholder="Email" required>
+                <input type="password" id="register-password" placeholder="Password" required>
+                <button type="submit">Register</button>
+            </form>
+        </div>
+        <form id="task-form">
+            <input type="text" id="title" placeholder="Task Title" required>
+            <textarea id="description" placeholder="Task Description"></textarea>
+            <select id="priority">
+                <option value="Low">Low</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="High">High</option>
+            </select>
+            <select id="status">
+                <option value="To Do" selected>To Do</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Done">Done</option>
+            </select>
+            <input type="date" id="deadline">
+            <button type="submit">Add Task</button>
+        </form>
+        <div id="filter-container">
+            <select id="priority-filter">
+                <option value="">All Priorities</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+            </select>
+            <select id="status-filter">
+                <option value="">All Statuses</option>
+                <option value="To Do">To Do</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Done">Done</option>
+            </select>
+            <input type="date" id="due-date-filter">
+            <input type="text" id="search" placeholder="Search tasks">
+            <button id="apply-filters">Apply Filters</button>
+        </div>
+        <div id="task-list"></div>
+    `;
 
-fetch('https://task-manager-gmp3gw.fly.dev')
-.then(response => response.json())
-.then(data => {
-console.log(data);
-// Update the UI with the received data
-})
-.catch(error => {
-console.error(error);
-// Display an error message to the user
-});
+    document.getElementById('task-form').addEventListener('submit', addTask);
+    document.getElementById('apply-filters').addEventListener('click', getTasks);
+    
+    if (token) {
+        document.getElementById('logout-btn').addEventListener('click', logout);
+    } else {
+        document.getElementById('login-register-btn').addEventListener('click', toggleAuthForms);
+        document.getElementById('login-form').addEventListener('submit', login);
+        document.getElementById('register-form').addEventListener('submit', register);
+    }
 
-// Function to handle registration
+    getTasks();
+}
+
+function toggleAuthForms() {
+    const authForms = document.getElementById('auth-forms');
+    authForms.style.display = authForms.style.display === 'none' ? 'block' : 'none';
+}
+
 async function register(event) {
     event.preventDefault();
     const username = document.getElementById('register-username').value;
     const email = document.getElementById('register-email').value;
     const password = document.getElementById('register-password').value;
-    const firstName = document.getElementById('register-firstName').value;
-    const lastName = document.getElementById('register-lastName').value;
 
     try {
         const response = await fetch(`${API_URL}/users/register`, {
             method: 'POST',
-            headers:
-{ 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, email, password, firstName, lastName }),
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, password }),
         });
         const data = await response.json();
         if (response.ok) {
             alert('Registration successful. Please log in.');
+            toggleAuthForms();
         } else {
             throw new Error(data.message || 'Registration failed');
         }
@@ -45,7 +101,6 @@ async function register(event) {
     }
 }
 
-// Function to handle login
 async function login(event) {
     event.preventDefault();
     const username = document.getElementById('login-username').value;
@@ -61,9 +116,7 @@ async function login(event) {
         if (response.ok) {
             token = data.token;
             localStorage.setItem('token', token);
-            document.getElementById('auth-container').style.display = 'none';
-            document.getElementById('task-container').style.display = 'block';
-            getTasks();
+            renderApp();
         } else {
             throw new Error(data.message || 'Login failed');
         }
@@ -72,15 +125,39 @@ async function login(event) {
     }
 }
 
-// Function to handle logout
 function logout() {
     localStorage.removeItem('token');
     token = null;
-    document.getElementById('auth-container').style.display = 'block';
-    document.getElementById('task-container').style.display = 'none';
+    renderApp();
 }
 
-// Function to fetch all tasks
+async function addTask(event) {
+    event.preventDefault();
+    const title = document.getElementById('title').value;
+    const description = document.getElementById('description').value;
+    const priority = document.getElementById('priority').value;
+    const status = document.getElementById('status').value;
+    const deadline = document.getElementById('deadline').value;
+
+    try {
+        const response = await fetch(`${API_URL}/tasks`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token ? `Bearer ${token}` : '',
+            },
+            body: JSON.stringify({ title, description, priority, status, deadline }),
+        });
+        if (!response.ok) {
+            throw new Error('Failed to add task');
+        }
+        getTasks();
+        document.getElementById('task-form').reset();
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
 async function getTasks() {
     const priorityFilter = document.getElementById('priority-filter').value;
     const statusFilter = document.getElementById('status-filter').value;
@@ -95,7 +172,7 @@ async function getTasks() {
 
     try {
         const response = await fetch(url, {
-            headers: { 'Authorization': `Bearer ${token}` },
+            headers: { 'Authorization': token ? `Bearer ${token}` : '' },
         });
         if (!response.ok) {
             throw new Error('Failed to fetch tasks');
@@ -112,7 +189,6 @@ async function getTasks() {
     }
 }
 
-// Function to create a task element
 function createTaskElement(task) {
     const taskElement = document.createElement('div');
     taskElement.classList.add('task');
@@ -128,35 +204,6 @@ function createTaskElement(task) {
     return taskElement;
 }
 
-// Function to add a new task
-async function addTask(event) {
-    event.preventDefault();
-    const title = document.getElementById('title').value;
-    const description = document.getElementById('description').value;
-    const priority = document.getElementById('priority').value;
-    const status = document.getElementById('status').value;
-    const deadline = document.getElementById('deadline').value;
-
-    try {
-        const response = await fetch(`${API_URL}/tasks`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify({ title, description, priority, status, deadline }),
-        });
-        if (!response.ok) {
-            throw new Error('Failed to add task');
-        }
-        getTasks();
-        document.getElementById('task-form').reset();
-    } catch (error) {
-        alert(error.message);
-    }
-}
-
-// Function to update a task's status
 async function updateTaskStatus(id, currentStatus) {
     const newStatus = currentStatus === 'To Do' ? 'In Progress' : 
                       currentStatus === 'In Progress' ? 'Done' : 'To Do';
@@ -165,7 +212,7 @@ async function updateTaskStatus(id, currentStatus) {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
+                'Authorization': token ? `Bearer ${token}` : '',
             },
             body: JSON.stringify({ status: newStatus }),
         });
@@ -178,12 +225,11 @@ async function updateTaskStatus(id, currentStatus) {
     }
 }
 
-// Function to delete a task
 async function deleteTask(id) {
     try {
         const response = await fetch(`${API_URL}/tasks/${id}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` },
+            headers: { 'Authorization': token ? `Bearer ${token}` : '' },
         });
         if (!response.ok) {
             throw new Error('Failed to delete task');
@@ -194,17 +240,6 @@ async function deleteTask(id) {
     }
 }
 
-// Event listeners
-document.getElementById('register-form').addEventListener('submit', register);
-document.getElementById('login-form').addEventListener('submit', login);
-document.getElementById('logout-btn').addEventListener('click', logout);
-document.getElementById('task-form').addEventListener('submit', addTask);
-document.getElementById('apply-filters').addEventListener('click', getTasks);
-
-// Check if user is already logged in
-if (token) {
-    document.getElementById('auth-container').style.display = 'none';
-    document.getElementById('task-container').style.display = 'block';
-    getTasks();
-}
+// Initial render
+renderApp();
 

@@ -25,7 +25,7 @@ function TaskForm({ isAuthenticated, onTaskAdded }) {
       }
 
       const newTask = await response.json();
-      onTaskAdded(newTask);
+      if (onTaskAdded) onTaskAdded(newTask);
       setTitle('');
       setDescription('');
       setPriority('Medium');

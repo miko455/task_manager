@@ -1,8 +1,8 @@
 .App {
-    text-align: center;
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
+    font-family: Arial, sans-serif;
   }
   
   .App-header {
@@ -15,53 +15,61 @@
     align-items: center;
   }
   
-  .header-left {
-    display: flex;
-    align-items: center;
-  }
-  
   .header-left h1 {
     margin: 0;
-    margin-right: 20px;
   }
   
-  .header-left nav a,
-  .header-right a,
   .header-right button {
+    background-color: #61dafb;
     color: white;
-    text-decoration: none;
-    margin-left: 10px;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 16px;
   }
   
   .content {
     display: flex;
-    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
   }
   
-  .auth-form, .task-form {
-    width: 45%;
-  }
-  
+  .task-form,
   .task-list {
-    width: 100%;
+    flex: 1;
+    min-width: 300px;
+  }
+  
+  .auth-forms {
+    display: flex;
+    justify-content: space-between;
     margin-top: 20px;
   }
   
-  .auth-form input, .task-form input, .task-form textarea, .task-form select {
-    width: 100%;
-    margin-bottom: 10px;
-    padding: 10px;
-    font-size: 16px;
+  .auth-form {
+    width: 48%;
   }
   
-  .auth-form button, .task-form button {
+  .task-form input,
+  .task-form textarea,
+  .task-form select,
+  .auth-form input {
     width: 100%;
     padding: 10px;
-    font-size: 16px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  .task-form button,
+  .auth-form button {
+    width: 100%;
+    padding: 10px;
     background-color: #61dafb;
     color: white;
     border: none;
     cursor: pointer;
+    font-size: 16px;
   }
   
   .task {
@@ -78,7 +86,6 @@
   .task button {
     margin-right: 10px;
     padding: 5px 10px;
-    font-size: 14px;
     background-color: #61dafb;
     color: white;
     border: none;
@@ -91,11 +98,24 @@
     margin-bottom: 20px;
   }
   
-  .filters select, .filters input {
+  .filters select,
+  .filters input {
     flex: 1;
     margin-right: 10px;
     padding: 5px;
     font-size: 14px;
+  }
+  
+  @media (max-width: 768px) {
+    .content,
+    .auth-forms {
+      flex-direction: column;
+    }
+  
+    .auth-form {
+      width: 100%;
+      margin-bottom: 20px;
+    }
   }
   
   
