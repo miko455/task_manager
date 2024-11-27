@@ -1,5 +1,22 @@
-const API_URL = 'http://localhost:5000/api';
+// Fetch API
+const API_URL = 'https://task-manager-gmp3gw.fly.dev';
 let token = localStorage.getItem('token');
+
+fetch('https://task-manager-gmp3gw.fly.dev')
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error(error));
+
+fetch('https://task-manager-gmp3gw.fly.dev')
+.then(response => response.json())
+.then(data => {
+console.log(data);
+// Update the UI with the received data
+})
+.catch(error => {
+console.error(error);
+// Display an error message to the user
+});
 
 // Function to handle registration
 async function register(event) {
