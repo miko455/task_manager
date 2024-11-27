@@ -20,7 +20,6 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) === -1) {
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
@@ -41,7 +40,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 .catch((error) => console.error('MongoDB connection error:', error));
 
 app.use('/api/users', userRoutes);
-app.use('/api/tasks', authenticateToken, taskRoutes);
+app.use('/api/tasks', taskRoutes);
 
 app.use(errorHandler);
 

@@ -1,33 +1,42 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
+import { getApiUrl } from '../config/api';
 
 function Login({ setIsAuthenticated }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const history = useHistory();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+
     try {
-      const response = await fetch('/api/users/login', {
+      const response = await fetch(getApiUrl('/users/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
+
       const data = await response.json();
+
       if (response.ok) {
         localStorage.setItem('token', data.token);
         setIsAuthenticated(true);
+        history.push('/');
       } else {
-        alert(data.message);
+        setError(data.message || 'Login failed');
       }
     } catch (error) {
-      alert('An error occurred. Please try again.');
+      setError('An error occurred. Please try again.');
     }
   };
 
   return (
     <div className="auth-form">
       <h2>Login</h2>
+      {error && <div className="error-message">{error}</div>}
       <form onSubmit={handleSubmit}>
         <input
           type="text"
@@ -45,9 +54,6 @@ function Login({ setIsAuthenticated }) {
         />
         <button type="submit">Login</button>
       </form>
-      <p>
-        Don't have an account? <Link to="/register">Register</Link>
-      </p>
     </div>
   );
 }

@@ -1,41 +1,44 @@
 import React, { useState } from 'react';
+import { getApiUrl, getHeaders } from '../config/api';
 
-function TaskForm() {
+function TaskForm({ isAuthenticated, onTaskAdded }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('Medium');
   const [status, setStatus] = useState('To Do');
   const [deadline, setDeadline] = useState('');
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+
     try {
-      const response = await fetch('/api/tasks', {
+      const response = await fetch(getApiUrl('/tasks'), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
+        headers: getHeaders(isAuthenticated),
         body: JSON.stringify({ title, description, priority, status, deadline }),
       });
-      if (response.ok) {
-        alert('Task added successfully');
-        setTitle('');
-        setDescription('');
-        setPriority('Medium');
-        setStatus('To Do');
-        setDeadline('');
-      } else {
-        const data = await response.json();
-        alert(data.message);
+
+      if (!response.ok) {
+        throw new Error('Failed to add task');
       }
+
+      const newTask = await response.json();
+      onTaskAdded(newTask);
+      setTitle('');
+      setDescription('');
+      setPriority('Medium');
+      setStatus('To Do');
+      setDeadline('');
     } catch (error) {
-      alert('An error occurred. Please try again.');
+      setError('Failed to add task. Please try again.');
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="task-form">
+      {error && <div className="error-message">{error}</div>}
       <input
         type="text"
         placeholder="Task Title"

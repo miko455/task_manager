@@ -1,21 +1,32 @@
 import express from 'express';
 import Task from '../models/Task.js';
+import { authenticateToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Get all tasks
-router.get('/', async (req, res, next) => {
+// Get all tasks (public and user-specific)
+router.get('/', authenticateToken, async (req, res, next) => {
   try {
-    const { priority, status, dueDate, search } = req.query;
-    let query = { user: req.user.userId };
+    const { priority, status, search } = req.query;
+    let query = {};
+
+    if (req.user) {
+      query.$or = [{ user: req.user.userId }, { user: null }];
+    } else {
+      query.user = null;
+    }
 
     if (priority) query.priority = priority;
     if (status) query.status = status;
-    if (dueDate) query.deadline = { $lte: new Date(dueDate) };
     if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+      query.$and = [
+        query.$or ? { $or: query.$or } : {},
+        {
+          $or: [
+            { title: { $regex: search, $options: 'i' } },
+            { description: { $regex: search, $options: 'i' } }
+          ]
+        }
       ];
     }
 
@@ -27,9 +38,12 @@ router.get('/', async (req, res, next) => {
 });
 
 // Get a single task
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', authenticateToken, async (req, res, next) => {
   try {
-    const task = await Task.findOne({ _id: req.params.id, user: req.user.userId });
+    const task = await Task.findOne({
+      _id: req.params.id,
+      $or: [{ user: req.user ? req.user.userId : null }, { user: null }]
+    });
     if (!task) {
       return res.status(404).json({ message: 'Task not found' });
     }
@@ -40,11 +54,11 @@ router.get('/:id', async (req, res, next) => {
 });
 
 // Create a new task
-router.post('/', async (req, res, next) => {
+router.post('/', authenticateToken, async (req, res, next) => {
   try {
     const task = new Task({
       ...req.body,
-      user: req.user.userId
+      user: req.user ? req.user.userId : null
     });
     const newTask = await task.save();
     res.status(201).json(newTask);
@@ -54,10 +68,13 @@ router.post('/', async (req, res, next) => {
 });
 
 // Update a task
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', authenticateToken, async (req, res, next) => {
   try {
     const task = await Task.findOneAndUpdate(
-      { _id: req.params.id, user: req.user.userId },
+      {
+        _id: req.params.id,
+        $or: [{ user: req.user ? req.user.userId : null }, { user: null }]
+      },
       req.body,
       { new: true, runValidators: true }
     );
@@ -71,9 +88,12 @@ router.put('/:id', async (req, res, next) => {
 });
 
 // Delete a task
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', authenticateToken, async (req, res, next) => {
   try {
-    const task = await Task.findOneAndDelete({ _id: req.params.id, user: req.user.userId });
+    const task = await Task.findOneAndDelete({
+      _id: req.params.id,
+      $or: [{ user: req.user ? req.user.userId : null }, { user: null }]
+    });
     if (!task) {
       return res.status(404).json({ message: 'Task not found' });
     }

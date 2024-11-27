@@ -1,90 +1,89 @@
 import React, { useState, useEffect } from 'react';
+import { getApiUrl, getHeaders } from '../config/api';
 
-function TaskList() {
+function TaskList({ isAuthenticated }) {
   const [tasks, setTasks] = useState([]);
   const [filter, setFilter] = useState({
     priority: '',
     status: '',
     search: '',
   });
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchTasks();
-  }, [filter]);
+  }, [filter, isAuthenticated]);
 
   const fetchTasks = async () => {
     try {
       const queryParams = new URLSearchParams(filter).toString();
-      const response = await fetch(`/api/tasks?${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
+      const response = await fetch(`${getApiUrl('/tasks')}?${queryParams}`, {
+        headers: getHeaders(isAuthenticated),
       });
-      if (response.ok) {
-        const data = await response.json();
-        setTasks(data);
-      } else {
+      
+      if (!response.ok) {
         throw new Error('Failed to fetch tasks');
       }
+      
+      const data = await response.json();
+      setTasks(data);
+      setError('');
     } catch (error) {
-      alert('An error occurred while fetching tasks.');
+      setError('Failed to fetch tasks. Please try again later.');
     }
   };
 
-  const handleFilterChange = (e) => {
-    setFilter({ ...filter, [e.target.name]: e.target.value });
-  };
-
   const handleStatusUpdate = async (id, currentStatus) => {
-    const newStatus = currentStatus === 'To Do' ? 'In Progress' : 
-                      currentStatus === 'In Progress' ? 'Done' : 'To Do';
     try {
-      const response = await fetch(`/api/tasks/${id}`, {
+      const newStatus = currentStatus === 'To Do' ? 'In Progress' : 
+                       currentStatus === 'In Progress' ? 'Done' : 'To Do';
+      
+      const response = await fetch(getApiUrl(`/tasks/${id}`), {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
+        headers: getHeaders(isAuthenticated),
         body: JSON.stringify({ status: newStatus }),
       });
-      if (response.ok) {
-        fetchTasks();
-      } else {
+      
+      if (!response.ok) {
         throw new Error('Failed to update task');
       }
+      
+      fetchTasks();
+      setError('');
     } catch (error) {
-      alert('An error occurred while updating the task.');
+      setError('Failed to update task. Please try again later.');
     }
   };
 
   const handleDelete = async (id) => {
     try {
-      const response = await fetch(`/api/tasks/${id}`, {
+      const response = await fetch(getApiUrl(`/tasks/${id}`), {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
+        headers: getHeaders(isAuthenticated),
       });
-      if (response.ok) {
-        fetchTasks();
-      } else {
+      
+      if (!response.ok) {
         throw new Error('Failed to delete task');
       }
+      
+      fetchTasks();
+      setError('');
     } catch (error) {
-      alert('An error occurred while deleting the task.');
+      setError('Failed to delete task. Please try again later.');
     }
   };
 
   return (
     <div className="task-list">
+      {error && <div className="error-message">{error}</div>}
       <div className="filters">
-        <select name="priority" onChange={handleFilterChange} value={filter.priority}>
+        <select name="priority" onChange={(e) => setFilter({ ...filter, priority: e.target.value })} value={filter.priority}>
           <option value="">All Priorities</option>
           <option value="Low">Low</option>
           <option value="Medium">Medium</option>
           <option value="High">High</option>
         </select>
-        <select name="status" onChange={handleFilterChange} value={filter.status}>
+        <select name="status" onChange={(e) => setFilter({ ...filter, status: e.target.value })} value={filter.status}>
           <option value="">All Statuses</option>
           <option value="To Do">To Do</option>
           <option value="In Progress">In Progress</option>
@@ -94,7 +93,7 @@ function TaskList() {
           type="text"
           name="search"
           placeholder="Search tasks"
-          onChange={handleFilterChange}
+          onChange={(e) => setFilter({ ...filter, search: e.target.value })}
           value={filter.search}
         />
       </div>
