@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 8080;
 // Configure CORS for Vercel frontend
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:3000',
-  'https://https://taskmgrlive.vercel.app'
+  'https://taskmgrlive.vercel.app/'
 ];
 
 app.use(cors({
