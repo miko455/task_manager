@@ -1,22 +1,22 @@
 // Fetch API
-const API_URL = 'https://fly.io/apps/task-manager-gmp3gw';
+const API_URL = 'https://task-manager-gmp3gw.fly.dev';
 let token = localStorage.getItem('token');
 
-fetch('https://fly.io/apps/task-manager-gmp3gw')
+fetch('https://task-manager-gmp3gw.fly.dev')
 .then(response => response.json())
 .then(data => console.log(data))
 .catch(error => console.error(error));
 
-// fetch('https://task-manager-gmp3gw.fly.dev')
-// .then(response => response.json())
-// .then(data => {
-// console.log(data);
-// // Update the UI with the received data
-// })
-// .catch(error => {
-// console.error(error);
-// // Display an error message to the user
-// });
+fetch('https://task-manager-gmp3gw.fly.dev')
+.then(response => response.json())
+.then(data => {
+console.log(data);
+// Update the UI with the received data
+})
+.catch(error => {
+console.error(error);
+// Display an error message to the user
+});
 
 // Function to handle registration
 async function register(event) {
